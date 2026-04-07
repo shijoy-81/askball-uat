@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AskBall UAT Portal</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:13px;color:#1a1a1a;background:#f4f6f9}
+.topbar{background:#1F4E79;padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:50px;position:sticky;top:0;z-index:200}
+.topbar h1{font-size:15px;font-weight:600;color:#fff;display:flex;align-items:center;gap:10px}
+.logo{width:30px;height:30px;background:#fff;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:16px}
+.uchip{background:rgba(255,255,255,0.15);border-radius:20px;padding:5px 14px;color:#fff;font-size:12px;display:none;align-items:center;gap:8px;cursor:pointer;border:none;font-family:inherit}
+.uchip:hover{background:rgba(255,255,255,0.25)}
+.avsm{width:22px;height:22px;border-radius:50%;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700}
+.nav{background:#2E75B6;display:flex;padding:0 24px;position:sticky;top:50px;z-index:200}
+.nb{background:none;border:none;color:rgba(255,255,255,0.7);padding:11px 18px;font-size:12px;cursor:pointer;border-bottom:2px solid transparent;font-family:inherit;transition:all 0.15s}
+.nb.on,.nb:hover{color:#fff}.nb.on{border-bottom-color:#fff}
+.wrap{padding:24px;max-width:1200px;margin:0 auto}
+.screen{display:none}.screen.on{display:block}
+.lc{max-width:580px;margin:36px auto;text-align:center}
+.lc h2{font-size:22px;font-weight:700;margin-bottom:8px}
+.lc p{color:#666;margin-bottom:26px}
+.tgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.tbtn{background:#fff;border:1px solid #e0e4ea;border-radius:10px;padding:12px 8px;cursor:pointer;font-size:11px;font-weight:600;color:#333;transition:all 0.15s;text-align:center;font-family:inherit}
+.tbtn:hover{border-color:#2E75B6;background:#EBF3FB;color:#1F4E79}
+.tbtn.done{border-color:#3B6D11;background:#EAF3DE;color:#27500A}
+.tbtn.part{border-color:#BA7517;background:#FFF8E7;color:#633806}
+.av{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;margin:0 auto 6px;background:#E6F1FB;color:#185FA5}
+.tbtn.done .av{background:#EAF3DE;color:#27500A}
+.tbtn.part .av{background:#FFF2CC;color:#7D5000}
+.tpct{font-size:10px;margin-top:3px;opacity:0.8}
+.fhdr{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;gap:16px;flex-wrap:wrap}
+.fhdr h2{font-size:18px;font-weight:700}
+.fhdr .sub{font-size:12px;color:#666;margin-top:4px}
+.pbwrap{text-align:right}
+.pblbl{font-size:11px;color:#888;margin-bottom:5px}
+.pbar{height:6px;background:#e0e4ea;border-radius:3px;overflow:hidden;width:220px;margin-left:auto}
+.pbfill{height:100%;background:#1F4E79;border-radius:3px;transition:width 0.4s}
+.sec-card{background:#fff;border:1px solid #e0e4ea;border-radius:12px;margin-bottom:14px;overflow:hidden}
+.sec-hdr{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;cursor:pointer;user-select:none}
+.sec-hdr:hover{background:#fafbfc}
+.sec-left{display:flex;align-items:center;gap:12px}
+.sec-ico{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.sec-title{font-size:14px;font-weight:700}
+.sec-desc{font-size:11px;color:#888;margin-top:2px}
+.sec-right{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.stag{font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px}
+.stag.done{background:#EAF3DE;color:#3B6D11}
+.stag.part{background:#FFF2CC;color:#7D5000}
+.stag.empty{background:#f1f1f1;color:#999}
+.chev{color:#bbb;font-size:14px;transition:transform 0.2s}
+.chev.open{transform:rotate(180deg)}
+.sec-body{padding:20px;display:none;border-top:1px solid #f0f0f0}
+.sec-body.open{display:block}
+.qcard{background:#fafbfc;border:1px solid #edf0f5;border-radius:9px;padding:16px;margin-bottom:10px}
+.qnum{font-size:10px;font-weight:700;color:#bbb;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px}
+.qhint{font-size:11px;color:#ccc;margin-bottom:12px;font-style:italic}
+.qlbl{font-size:10px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:5px}
+.req{color:#c00}
+.q2col{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.qsrc{margin-bottom:14px}
+.scoring-hdr{font-size:10px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:0.05em;padding-bottom:8px;border-bottom:1px solid #edf0f5;margin-bottom:10px}
+.sc4{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:8px}
+input[type=text],select,textarea{width:100%;border:1px solid #dde2ea;border-radius:7px;padding:7px 10px;font-size:12px;background:#fff;color:#333;font-family:inherit;outline:none;transition:border 0.15s}
+input[type=text]:focus,select:focus,textarea:focus{border-color:#2E75B6;box-shadow:0 0 0 3px rgba(46,117,182,0.08)}
+textarea{height:52px;resize:vertical}
+.add-btn{width:100%;padding:9px;border:1px dashed #c8d6e8;border-radius:8px;background:none;color:#2E75B6;font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;margin-top:4px;transition:all 0.15s}
+.add-btn:hover{background:#EBF3FB}
+.la-chdr{display:grid;grid-template-columns:1fr 110px 85px 72px;gap:8px;padding:0 14px 8px;font-size:10px;color:#aaa;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;border-bottom:1px solid #edf0f5;margin-bottom:6px}
+.larow{display:grid;grid-template-columns:1fr 110px 85px 72px;gap:8px;padding:10px 14px;border-radius:7px;margin-bottom:2px;align-items:start}
+.larow:nth-child(odd){background:#fafbfc}
+.laref{font-size:10px;color:#bbb;font-weight:700;margin-top:3px}
+.lacmt{padding:0 14px 10px}
+.lacmt:nth-child(even){background:#fafbfc}
+.saving{font-size:11px;color:#2E75B6;opacity:0;transition:opacity 0.3s;margin-left:8px}
+.saving.on{opacity:1}
+.btn-row{display:flex;align-items:center;justify-content:space-between;margin-top:20px;padding:14px 0;border-top:1px solid #e0e4ea;flex-wrap:wrap;gap:10px;position:sticky;bottom:0;background:#f4f6f9;z-index:10}
+.btn{padding:9px 18px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid #dde2ea;background:#fff;color:#333;transition:all 0.15s;font-family:inherit}
+.btn:hover{background:#f0f0f0}
+.btn.pri{background:#1F4E79;color:#fff;border-color:#1F4E79}
+.btn.pri:hover{background:#2E75B6}
+.btn.teal{background:#1F5E6B;color:#fff;border-color:#1F5E6B}
+.btn.teal:hover{background:#2E8B96}
+.smsg{font-size:12px;color:#3B6D11;transition:opacity 0.3s;opacity:0;font-weight:600}
+.smsg.on{opacity:1}
+.dash-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:10px}
+.dash-top h2{font-size:19px;font-weight:700}
+.kgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:18px}
+.kcard{background:#fff;border:1px solid #e0e4ea;border-radius:10px;padding:16px}
+.klbl{font-size:11px;color:#888;margin-bottom:5px;font-weight:600}
+.kval{font-size:28px;font-weight:700}
+.kval.bl{color:#185FA5}.kval.gr{color:#3B6D11}.kval.rd{color:#A32D2D}.kval.am{color:#854F0B}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.panel{background:#fff;border:1px solid #e0e4ea;border-radius:12px;padding:18px;margin-bottom:14px}
+.panel h3{font-size:13px;font-weight:700;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;justify-content:space-between}
+.live-dot{width:8px;height:8px;border-radius:50%;background:#3B6D11;display:inline-block;margin-right:6px;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+.tbl{width:100%;border-collapse:collapse;font-size:12px}
+.tbl th{text-align:left;padding:8px 10px;font-weight:700;font-size:11px;color:#888;border-bottom:1px solid #eee;white-space:nowrap}
+.tbl td{padding:9px 10px;border-bottom:1px solid #f5f5f5;vertical-align:middle}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr:hover td{background:#fafbfc}
+.badge{display:inline-block;font-size:10px;font-weight:700;padding:2px 9px;border-radius:20px}
+.badge.pass{background:#EAF3DE;color:#3B6D11}
+.badge.fail{background:#FCEBEB;color:#791F1F}
+.badge.pend{background:#f1f1f1;color:#888}
+.badge.part{background:#FFF2CC;color:#7D5000}
+.hbar{display:flex;align-items:center;gap:8px;margin-bottom:7px;font-size:11px}
+.hbar-lbl{width:130px;flex-shrink:0;color:#666;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hbar-track{flex:1;height:8px;background:#f0f0f0;border-radius:4px;overflow:hidden}
+.hbar-fill{height:100%;border-radius:4px;transition:width 0.5s}
+.hbar-val{width:34px;text-align:right;font-weight:700;font-size:11px}
+.sev{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px}
+.sev.hi{background:#FCEBEB;color:#791F1F}.sev.me{background:#FFF2CC;color:#7D5000}.sev.lo{background:#EAF3DE;color:#27500A}
+.def-row{padding:12px 0;border-bottom:1px solid #f5f5f5}
+.def-row:last-child{border-bottom:none}
+.def-t{font-weight:700;font-size:12px;margin-bottom:4px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.def-m{font-size:11px;color:#666;line-height:1.6}
+.ic1{background:#EBF3FB}.ic2{background:#FFF2CC}.ic3{background:#EAF3DE}
+.ic4{background:#FCE4D6}.ic5{background:#E2EFDA}.ic6{background:#EEEEEE}
+.ic7{background:#FBE5D6}.ic8{background:#DDEBF7}.ic9{background:#E2EFDA}
+.ic10{background:#F2F2F2}.ic11{background:#E6F1FB}.ic12{background:#E1F5EE}
+.refresh-note{font-size:11px;color:#888;margin-top:6px}
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid #dde2ea;border-top-color:#2E75B6;border-radius:50%;animation:spin 0.7s linear infinite;vertical-align:middle;margin-right:6px}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <h1><span class="logo">&#129309;</span>AskBall UAT Portal &#8212; Sprint 6</h1>
+  <button class="uchip" id="uchip" onclick="logout()">
+    <div class="avsm" id="chip-av"></div>
+    <span id="chip-name"></span>
+    <span style="opacity:0.6;font-size:11px">&#8617; Switch</span>
+  </button>
+</div>
+<div class="nav">
+  <button class="nb on" onclick="goTo('login')" id="nb-login">Home</button>
+  <button class="nb" onclick="goTo('form')" id="nb-form">My Tests</button>
+  <button class="nb" onclick="goTo('dash')" id="nb-dash">&#9679; Dashboard</button>
+  <button class="nb" onclick="goTo('defects')" id="nb-defects">Defects</button>
+</div>
+<div class="wrap">
+
+<div class="screen on" id="sc-login">
+  <div class="lc">
+    <h2>AskBall UAT Portal</h2>
+    <p>Sprint 6 &middot; Chatbot + Live Agent Hand Off &middot; Select your name to begin</p>
+    <div class="tgrid" id="tgrid"><div style="color:#888;font-size:12px;grid-column:1/-1;padding:20px">Loading...</div></div>
+  </div>
+</div>
+
+<div class="screen" id="sc-form">
+  <div class="fhdr">
+    <div><h2 id="fh-name">My Tests</h2><div class="sub" id="fh-sub"></div></div>
+    <div class="pbwrap">
+      <div class="pblbl" id="pb-lbl">0% complete</div>
+      <div class="pbar"><div class="pbfill" id="pb-fill" style="width:0%"></div></div>
+      <div class="refresh-note">Responses auto-save as you type</div>
+    </div>
+  </div>
+  <div id="all-secs"></div>
+  <div class="btn-row">
+    <span class="smsg" id="smsg">Saved!</span>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn teal" onclick="exportMyXLS()">&#11015; Export my results</button>
+      <button class="btn pri" onclick="submitAll()">&#10003; Submit all responses</button>
+    </div>
+  </div>
+</div>
+
+<div class="screen" id="sc-dash">
+  <div class="dash-top">
+    <h2><span class="live-dot"></span>Live Dashboard</h2>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn" onclick="loadDash()">&#8635; Refresh</button>
+      <button class="btn teal" onclick="exportAllXLS()">&#11015; Export all data</button>
+    </div>
+  </div>
+  <div id="dash-content"><div style="color:#888;padding:40px;text-align:center"><span class="spinner"></span>Loading dashboard...</div></div>
+</div>
+
+<div class="screen" id="sc-defects">
+  <div class="dash-top"><h2>Defect Tracker</h2><button class="btn teal" onclick="exportDefXLS()">&#11015; Export defects</button></div>
+  <div class="kgrid" style="grid-template-columns:repeat(3,1fr);max-width:440px;margin-bottom:18px" id="def-kpis"></div>
+  <div class="panel"><h3>Auto-detected defects</h3><div id="def-list"></div></div>
+</div>
+
+</div>
+
+<script>
+var TESTERS = ["Alexandra S","Altan B","Amy R","Bosko S","Bruna B","Bruno F","Chris M","Chris V","Eduardo C","Emma N","Fernando Z","Igor L","Jules L","Katie G","Kristina K","Lauren B","Lucas C","Lucas L","Marijana J","Marisa P","Mark K","Milos N","Montserrat A","Rapha M","Renee R","Rick K","Rob W","Steve O","Susan N","Ted D","Terry S","Tony A","Viera N"];
+var PAIRING = {"Montserrat A":"Bosko S","Eduardo C":"Junior, Luis","Igor L":"Goncalves, Joao","Kristina K":"Marisa P","Rob W":"Bosko S","Bosko S":"Montserrat A & Rob W","Milos N":"Alvarez, Alex","Marisa P":"Kristina K"};
+var SECTIONS = [
+  {id:"s1",num:1,icon:"&#9881;",title:"General System Behavior",desc:"Test how the bot introduces itself, handles off-topic questions and edge cases.",topic:"General System Behavior",seeds:[{n:1,hint:"e.g. How does the bot greet you?"},{n:2,hint:"e.g. Ask something completely off-topic"},{n:3,hint:"e.g. Ask about a document that doesn't exist"}]},
+  {id:"s2",num:2,icon:"&#128176;",title:"Payroll & Tax",desc:"Ask AskBall 3+ questions about payroll, tax codes, ADP, pay slips.",topic:"Payroll & Tax",seeds:[{n:4,hint:"e.g. Ask about: ADP Global myView 2026"},{n:5,hint:"e.g. Ask about: MyADP User Guide 2026"}]},
+  {id:"s3",num:3,icon:"&#127758;",title:"Employee Assistance (EAP)",desc:"Ask AskBall 3+ questions about EAP programmes and mental health.",topic:"EAP",seeds:[{n:6,hint:"e.g. Ask about: EAP U.S. Ball Corp EAP Brochure"},{n:7,hint:"e.g. Ask about: EAP - Canada Q1 2026"}]},
+  {id:"s4",num:4,icon:"&#128200;",title:"Performance & Goals",desc:"Ask AskBall 3+ questions about performance reviews, goals and playbooks.",topic:"Performance & Goals",seeds:[{n:8,hint:"e.g. Ask about: English Performance Enablement Playbook"},{n:9,hint:"e.g. Ask about: English Performance Reflection Manager UserGuide"}]},
+  {id:"s5",num:5,icon:"&#127891;",title:"Learning & Development",desc:"Ask AskBall 3+ questions about Ball Academy, learning reports and courses.",topic:"Learning & Development",seeds:[{n:10,hint:"e.g. Ask about: English Assign And Manage Learning in BallAcademy"},{n:11,hint:"e.g. Ask about: English Learning in Ball Academy UserGuide"},{n:12,hint:"e.g. Ask about: English BallAcademy Learning Reporting UserGuide"}]},
+  {id:"s6",num:6,icon:"&#128100;",title:"Profile & Personal Info",desc:"Ask AskBall 3+ questions about updating profiles and contact info.",topic:"Profile & Personal Info",seeds:[{n:13,hint:"e.g. Ask about: English Update SuccessFactors Profile UserGuide"},{n:14,hint:"e.g. Ask about: English Update Contact Information UserGuide"}]},
+  {id:"s7",num:7,icon:"&#128188;",title:"Careers & Recruitment",desc:"Ask AskBall 3+ questions about job search, applications and interviews.",topic:"Careers & Recruitment",seeds:[{n:15,hint:"e.g. Ask about: English Career Opportunities Search and Apply for Jobs"},{n:16,hint:"e.g. Ask about: English Interview Preparation UserGuide"}]},
+  {id:"s8",num:8,icon:"&#128203;",title:"Policies & Compliance",desc:"Ask AskBall 3+ questions about corporate policies, compliance and access.",topic:"Policies & Compliance",seeds:[{n:17,hint:"e.g. Ask about: Anytime Anywhere Access"},{n:18,hint:"e.g. Ask about: Corporate Compliance"}]},
+  {id:"s9",num:9,icon:"&#127760;",title:"Regional / Service Now",desc:"Ask AskBall 3+ region-specific or ServiceNow questions in your local language.",topic:"Regional / ServiceNow",seeds:[{n:19,hint:"e.g. Ask about: MEX Perdi mi tarjeta de estacionamiento"},{n:20,hint:"e.g. Ask about: UK How do I cancel my holiday request"}]},
+  {id:"s10",num:10,icon:"&#128295;",title:"Additional / MAM",desc:"Ask AskBall 3+ additional questions of your choice. Include any MAM / mobile testing.",topic:"Additional / MAM",seeds:[{n:22,hint:"Your own question"},{n:23,hint:"Your own question"},{n:24,hint:"Your own question"}]}
+];
+var TQS = [
+  {ref:"T1",q:"Able to connect with Live Agent - directly in the chat?"},
+  {ref:"T2",q:"Able to connect with Live Agent when bot has no answer?"},
+  {ref:"T3",q:"Was the conversation seamless after handoff?"},
+  {ref:"T4",q:"Is the Live Agent name appearing in the chat?"},
+  {ref:"T5",q:'Does typing "Bye" terminate the conversation?'}
+];
+var AQS = [
+  {ref:"A1",q:"Is the chat summary available in SNOW Chat?"},
+  {ref:"A2",q:"Is the tester's question visible in the chat?"},
+  {ref:"A3",q:"Is the tester name shown by alphabets / initials?"},
+  {ref:"A4",q:"Does automatic termination of chat happen after Bye?"}
+];
+var LAQS = TQS.concat(AQS);
+
+var CU = null;
+var LOCAL = {};  // local cache
+var SAVE_TIMER = null;
+var DASH_TIMER = null;
+
+var API = '';  // same origin
+
+function ini(n){return n.split(' ').map(function(w){return w[0];}).join('').slice(0,2).toUpperCase();}
+function esc(s){return (s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+// ── Load tester data from server ─────────────────────────
+function loadTester(name, cb) {
+  fetch(API + '/api/responses/' + encodeURIComponent(name))
+    .then(function(r){return r.json();})
+    .then(function(data){
+      LOCAL[name] = buildLocalCache(data.rows, data.submitted);
+      if(cb) cb();
+    })
+    .catch(function(){ if(cb) cb(); });
+}
+
+function buildLocalCache(rows, submitted) {
+  var cache = {submitted: submitted, cb: {}, la: {}};
+  rows.forEach(function(r) {
+    if(r.section === 'la') {
+      cache.la[r.q_ref] = {result:r.result,rating:r.rating,pf:r.pass_fail,cmt:r.comments};
+    } else {
+      if(!cache.cb[r.section]) cache.cb[r.section] = {};
+      cache.cb[r.section][r.q_num] = {
+        q:r.question,bot:r.bot_response,src:r.source_ref,
+        q1:r.q1,q2:r.q2,q3:r.q3,q4:r.q4,q5:r.q5,q6:r.q6,q7:r.q7,q8:r.q8,cmt:r.comments
+      };
+    }
+  });
+  return cache;
+}
+
+// ── Save a single field to server (debounced) ────────────
+function saveField(payload) {
+  fetch(API + '/api/response', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify(payload)
+  }).then(function(r){return r.json();}).then(function(){
+    showSaving(false);
+  }).catch(function(){});
+}
+
+function showSaving(active) {
+  var el = document.getElementById('smsg');
+  if(el) { el.textContent = active ? 'Saving...' : 'Saved \u2713'; el.classList.add('on'); if(!active) setTimeout(function(){el.classList.remove('on');},1500); }
+}
+
+// ── Build login grid from server dashboard ────────────────
+function buildGrid() {
+  fetch(API + '/api/dashboard')
+    .then(function(r){return r.json();})
+    .then(function(data){
+      var subs = {};
+      data.submissions.forEach(function(s){ subs[s.tester] = s.submitted_at; });
+      var counts = {};
+      data.responses.forEach(function(r){
+        if(!counts[r.tester]) counts[r.tester] = 0;
+        if(r.question || r.result) counts[r.tester]++;
+      });
+      var total = SECTIONS.reduce(function(a,s){return a+s.seeds.length;},0) + LAQS.length;
+      document.getElementById('tgrid').innerHTML = TESTERS.map(function(n) {
+        var cnt = counts[n] || 0;
+        var pct = Math.round(cnt/total*100);
+        var cls = subs[n] ? 'done' : cnt > 0 ? 'part' : '';
+        return '<button class="tbtn '+cls+'" onclick="pick(\''+n+'\')">'+
+          '<div class="av">'+ini(n)+'</div>'+n+
+          '<div class="tpct">'+(subs[n]?'Submitted':cnt>0?pct+'% done':'Not started')+'</div>'+
+          '</button>';
+      }).join('');
+    })
+    .catch(function(){
+      // offline fallback
+      document.getElementById('tgrid').innerHTML = TESTERS.map(function(n) {
+        return '<button class="tbtn" onclick="pick(\''+n+'\')">'+
+          '<div class="av">'+ini(n)+'</div>'+n+'<div class="tpct">Not started</div></button>';
+      }).join('');
+    });
+}
+
+function pick(name) {
+  CU = name;
+  document.getElementById('uchip').style.display = 'flex';
+  document.getElementById('chip-name').textContent = name;
+  document.getElementById('chip-av').textContent = ini(name);
+  goTo('form');
+  document.getElementById('all-secs').innerHTML = '<div style="color:#888;padding:40px;text-align:center"><span class="spinner"></span>Loading your responses...</div>';
+  loadTester(name, function(){ buildForm(); });
+}
+
+function logout() {
+  CU = null;
+  document.getElementById('uchip').style.display = 'none';
+  goTo('login');
+  buildGrid();
+}
+
+function goTo(id) {
+  ['login','form','dash','defects'].forEach(function(s){
+    document.getElementById('sc-'+s).classList.toggle('on', s===id);
+    document.getElementById('nb-'+s).classList.toggle('on', s===id);
+  });
+  if(id==='login') buildGrid();
+  if(id==='dash') loadDash();
+  if(id==='defects') loadDefects();
+}
+
+// ── Form ─────────────────────────────────────────────────
+function ud() { return LOCAL[CU] || {cb:{},la:{},submitted:null}; }
+
+function getRow(sid, qnum) {
+  var d = ud();
+  return (d.cb[sid] && d.cb[sid][qnum]) || {q:'',bot:'',src:'',q1:'',q2:'',q3:'',q4:'',q5:'',q6:'',q7:'',q8:'',cmt:''};
+}
+function getLA(ref) {
+  var d = ud();
+  return (d.la && d.la[ref]) || {result:'',rating:'',pf:'',cmt:''};
+}
+
+function buildForm() {
+  if(!CU) return;
+  var paired = PAIRING[CU] || 'To be assigned';
+  document.getElementById('fh-name').textContent = CU;
+  document.getElementById('fh-sub').textContent = 'Paired Live Agent: ' + paired + '  |  Sprint 6 UAT';
+  var html = '';
+  SECTIONS.forEach(function(s){ html += renderCBSec(s); });
+  html += renderLASec('s11', paired);
+  html += renderLASec('s12', paired);
+  document.getElementById('all-secs').innerHTML = html;
+  updProg();
+}
+
+function selO(arr, val) {
+  return arr.map(function(o){ return '<option value="'+o.v+'"'+(val===o.v?' selected':'')+'>'+o.l+'</option>'; }).join('');
+}
+var YNU = [{v:'',l:'&#8212;'},{v:'Y',l:'Y &#8212; Yes'},{v:'N',l:'N &#8212; No'},{v:'Unsure',l:'Unsure'}];
+var YN  = [{v:'',l:'&#8212;'},{v:'Y',l:'Y &#8212; Yes'},{v:'N',l:'N &#8212; No'}];
+var PF  = [{v:'',l:'P/F'},{v:'Pass',l:'Pass'},{v:'Fail',l:'Fail'}];
+function starO(val) {
+  var s='<option value="">&#8212;</option>';
+  for(var i=1;i<=5;i++) s+='<option value="'+i+'"'+(val==i?' selected':'')+'>\u2605 '+i+'</option>';
+  return s;
+}
+
+function renderCBSec(s) {
+  var rows = s.seeds.map(function(seed){ return getRow(s.id, seed.n); });
+  var extra = [];
+  var d = ud();
+  if(d.cb && d.cb[s.id]) {
+    Object.keys(d.cb[s.id]).forEach(function(k){
+      var n = parseInt(k);
+      var inSeed = s.seeds.some(function(seed){return seed.n===n;});
+      if(!inSeed) extra.push({n:n, data:d.cb[s.id][k]});
+    });
+  }
+  var filled = rows.filter(function(r){return r.q&&r.q.trim();}).length;
+  filled += extra.filter(function(r){return r.data.q&&r.data.q.trim();}).length;
+  var total = s.seeds.length + extra.length;
+  var scls = filled===total&&total>0?'done':filled>0?'part':'empty';
+  var stxt = filled===total&&total>0?'Complete':filled>0?filled+'/'+total+' done':'Not started';
+
+  var qhtml = s.seeds.map(function(seed, i) {
+    var row = rows[i];
+    return renderQCard(s.id, seed.n, seed.hint, row);
+  }).join('');
+  extra.forEach(function(ex){ qhtml += renderQCard(s.id, ex.n, 'Additional question', ex.data); });
+
+  return '<div class="sec-card" id="card-'+s.id+'">'+
+    '<div class="sec-hdr" onclick="toggleSec(\''+s.id+'\')">'+
+      '<div class="sec-left"><div class="sec-ico ic'+s.num+'">'+s.icon+'</div>'+
+      '<div><div class="sec-title">Section '+s.num+': '+s.title+'</div><div class="sec-desc">'+s.desc+'</div></div></div>'+
+      '<div class="sec-right"><span class="stag '+scls+'" id="tag-'+s.id+'">'+stxt+'</span>'+
+      '<span class="chev" id="chev-'+s.id+'">&#9662;</span></div>'+
+    '</div>'+
+    '<div class="sec-body" id="body-'+s.id+'">'+qhtml+
+    '<button class="add-btn" onclick="addRow(\''+s.id+'\',event)">+ Add another question</button>'+
+    '</div></div>';
+}
+
+function renderQCard(sid, qnum, hint, row) {
+  return '<div class="qcard">'+
+    '<div class="qnum">Question '+qnum+'</div>'+
+    '<div class="qhint">'+esc(hint)+'</div>'+
+    '<div class="q2col">'+
+      '<div><div class="qlbl">Your question <span class="req">*</span></div>'+
+      '<textarea placeholder="Write your question in your own words..." onchange="sr(\''+sid+'\','+qnum+',\'q\',this.value)">'+esc(row.q)+'</textarea></div>'+
+      '<div><div class="qlbl">Bot response (paste here)</div>'+
+      '<textarea placeholder="Paste what AskBall replied..." onchange="sr(\''+sid+'\','+qnum+',\'bot\',this.value)">'+esc(row.bot)+'</textarea></div>'+
+    '</div>'+
+    '<div class="qsrc"><div class="qlbl">Source referenced</div>'+
+    '<input type="text" placeholder="e.g. English Performance Playbook.pdf" value="'+esc(row.src)+'" onchange="sr(\''+sid+'\','+qnum+',\'src\',this.value)"></div>'+
+    '<div class="scoring-hdr">Quality scoring</div>'+
+    '<div class="sc4">'+
+      '<div><div class="qlbl">1. Right answer?</div><select onchange="sr(\''+sid+'\','+qnum+',\'q1\',this.value)">'+selO(YNU,row.q1)+'</select></div>'+
+      '<div><div class="qlbl">2. Sources correct?</div><select onchange="sr(\''+sid+'\','+qnum+',\'q2\',this.value)">'+selO(YNU,row.q2)+'</select></div>'+
+      '<div><div class="qlbl">3. Experience (1-5)</div><select onchange="sr(\''+sid+'\','+qnum+',\'q3\',this.value)">'+starO(row.q3)+'</select></div>'+
+      '<div><div class="qlbl">4. Well formatted?</div><select onchange="sr(\''+sid+'\','+qnum+',\'q4\',this.value)">'+selO(YN,row.q4)+'</select></div>'+
+    '</div>'+
+    '<div class="sc4">'+
+      '<div><div class="qlbl">5. Right language?</div><select onchange="sr(\''+sid+'\','+qnum+',\'q5\',this.value)">'+selO(YN,row.q5)+'</select></div>'+
+      '<div><div class="qlbl">6. Handled uncertainty?</div><select onchange="sr(\''+sid+'\','+qnum+',\'q6\',this.value)">'+selO(YN,row.q6)+'</select></div>'+
+      '<div><div class="qlbl">7. Hallucination?</div><select onchange="sr(\''+sid+'\','+qnum+',\'q7\',this.value)">'+selO(YN,row.q7)+'</select></div>'+
+      '<div><div class="qlbl">8. Overall rating (1-5)</div><select onchange="sr(\''+sid+'\','+qnum+',\'q8\',this.value)">'+starO(row.q8)+'</select></div>'+
+    '</div>'+
+    '<div><div class="qlbl">Comments / Suggested fix</div>'+
+    '<input type="text" placeholder="Any observations or issues..." value="'+esc(row.cmt)+'" onchange="sr(\''+sid+'\','+qnum+',\'cmt\',this.value)"></div>'+
+  '</div>';
+}
+
+function renderLASec(sid, paired) {
+  var isTester = sid==='s11';
+  var qs = isTester ? TQS : AQS;
+  var num = isTester ? 11 : 12;
+  var icon = isTester ? '&#129514;' : '&#127911;';
+  var title = isTester ? 'Section 11: As Tester - Live Agent Hand Off' : 'Section 12: As Live Agent - SNOW Chat';
+  var desc = isTester
+    ? 'Initiate a Live Agent handoff in AskBall. Paired with: '+paired
+    : 'Monitor SNOW Chat for your paired partner ('+paired+') and complete the agent checklist.';
+  var answered = qs.filter(function(q){ var d=getLA(q.ref); return d.result; }).length;
+  var scls = answered===qs.length?'done':answered>0?'part':'empty';
+  var stxt = answered===qs.length?'Complete':answered>0?answered+'/'+qs.length+' done':'Not started';
+
+  var qhtml = qs.map(function(item,i){
+    var d = getLA(item.ref);
+    var ev = i%2===0?'background:#fafbfc':'';
+    return '<div class="larow" style="'+ev+'">'+
+      '<div><div style="font-size:12px;font-weight:500;line-height:1.4">'+item.q+'</div><div class="laref">'+item.ref+'</div></div>'+
+      '<select onchange="sl(\''+item.ref+'\',\'result\',this.value)">'+selO([{v:'',l:'Result'},{v:'Y',l:'Y - Yes'},{v:'N',l:'N - No'},{v:'Unsure',l:'Unsure'}],d.result)+'</select>'+
+      '<select onchange="sl(\''+item.ref+'\',\'rating\',this.value)">'+selO([{v:'',l:'Rating'},{v:'1',l:'\u2605 1/5'},{v:'2',l:'\u2605 2/5'},{v:'3',l:'\u2605 3/5'},{v:'4',l:'\u2605 4/5'},{v:'5',l:'\u2605 5/5'}],d.rating)+'</select>'+
+      '<select onchange="sl(\''+item.ref+'\',\'pf\',this.value)">'+selO(PF,d.pf)+'</select>'+
+      '</div>'+
+      '<div class="lacmt" style="'+ev+'">'+
+      '<textarea placeholder="Comments for '+item.ref+'..." onchange="sl(\''+item.ref+'\',\'cmt\',this.value)">'+esc(d.cmt)+'</textarea>'+
+      '</div>';
+  }).join('');
+
+  return '<div class="sec-card" id="card-'+sid+'">'+
+    '<div class="sec-hdr" onclick="toggleSec(\''+sid+'\')">'+
+      '<div class="sec-left"><div class="sec-ico ic'+num+'">'+icon+'</div>'+
+      '<div><div class="sec-title">'+title+'</div><div class="sec-desc">'+desc+'</div></div></div>'+
+      '<div class="sec-right"><span class="stag '+scls+'" id="tag-'+sid+'">'+stxt+'</span>'+
+      '<span class="chev" id="chev-'+sid+'">&#9662;</span></div>'+
+    '</div>'+
+    '<div class="sec-body" id="body-'+sid+'">'+
+      '<div class="la-chdr"><span>Test item</span><span>Result</span><span>Rating</span><span>Pass/Fail</span></div>'+
+      qhtml+'</div></div>';
+}
+
+function toggleSec(sid) {
+  var b=document.getElementById('body-'+sid), c=document.getElementById('chev-'+sid);
+  var open=b.classList.contains('open');
+  b.classList.toggle('open',!open); c.classList.toggle('open',!open);
+}
+
+// ── Save functions ────────────────────────────────────────
+function sr(sid, qnum, field, val) {
+  var d = LOCAL[CU]; if(!d){LOCAL[CU]={cb:{},la:{},submitted:null};d=LOCAL[CU];}
+  if(!d.cb) d.cb={};
+  if(!d.cb[sid]) d.cb[sid]={};
+  if(!d.cb[sid][qnum]) d.cb[sid][qnum]={q:'',bot:'',src:'',q1:'',q2:'',q3:'',q4:'',q5:'',q6:'',q7:'',q8:'',cmt:''};
+  d.cb[sid][qnum][field] = val;
+  updProg();
+  var row = d.cb[sid][qnum];
+  var sec = SECTIONS.find(function(s){return s.id===sid;});
+  showSaving(true);
+  saveField({
+    tester:CU, section:sid, q_num:qnum, q_ref:null,
+    question:row.q||null, bot_response:row.bot||null, source_ref:row.src||null,
+    q1:row.q1||null,q2:row.q2||null,q3:row.q3||null,q4:row.q4||null,
+    q5:row.q5||null,q6:row.q6||null,q7:row.q7||null,q8:row.q8||null,
+    result:null, rating:null, pass_fail:null, comments:row.cmt||null
+  });
+}
+
+function sl(ref, field, val) {
+  var d = LOCAL[CU]; if(!d){LOCAL[CU]={cb:{},la:{},submitted:null};d=LOCAL[CU];}
+  if(!d.la) d.la={};
+  if(!d.la[ref]) d.la[ref]={result:'',rating:'',pf:'',cmt:''};
+  d.la[ref][field] = val;
+  if(field==='result' && !d.la[ref].pf) d.la[ref].pf = val==='Y'?'Pass':val==='N'?'Fail':'';
+  updProg();
+  showSaving(true);
+  var r = d.la[ref];
+  saveField({
+    tester:CU, section:'la', q_num:null, q_ref:ref,
+    question:null, bot_response:null, source_ref:null,
+    q1:null,q2:null,q3:null,q4:null,q5:null,q6:null,q7:null,q8:null,
+    result:r.result||null, rating:r.rating||null, pass_fail:r.pf||null, comments:r.cmt||null
+  });
+}
+
+function addRow(sid, evt) {
+  evt.stopPropagation();
+  var d = LOCAL[CU]; if(!d){LOCAL[CU]={cb:{},la:{},submitted:null};d=LOCAL[CU];}
+  if(!d.cb) d.cb={}; if(!d.cb[sid]) d.cb[sid]={};
+  var maxN = 0;
+  SECTIONS.forEach(function(s){ if(s.id===sid) s.seeds.forEach(function(seed){maxN=Math.max(maxN,seed.n);}); });
+  Object.keys(d.cb[sid]).forEach(function(k){maxN=Math.max(maxN,parseInt(k));});
+  var newN = maxN + 1;
+  d.cb[sid][newN] = {q:'',bot:'',src:'',q1:'',q2:'',q3:'',q4:'',q5:'',q6:'',q7:'',q8:'',cmt:''};
+  var wasOpen = document.getElementById('body-'+sid).classList.contains('open');
+  var s = SECTIONS.find(function(x){return x.id===sid;});
+  document.getElementById('card-'+sid).outerHTML = renderCBSec(s);
+  if(wasOpen){document.getElementById('body-'+sid).classList.add('open');document.getElementById('chev-'+sid).classList.add('open');}
+}
+
+function updProg() {
+  var d = ud();
+  var done = 0, total = 0;
+  SECTIONS.forEach(function(s){
+    var seedNs = s.seeds.map(function(x){return x.n;});
+    var extraNs = d.cb&&d.cb[s.id] ? Object.keys(d.cb[s.id]).filter(function(k){return seedNs.indexOf(parseInt(k))===-1;}) : [];
+    total += s.seeds.length + extraNs.length;
+    s.seeds.forEach(function(seed){ var r=getRow(s.id,seed.n); if(r.q&&r.q.trim())done++; });
+    extraNs.forEach(function(k){ var r=getRow(s.id,parseInt(k)); if(r.q&&r.q.trim())done++; });
+  });
+  var laD = LAQS.filter(function(q){return getLA(q.ref).result;}).length;
+  total += LAQS.length; done += laD;
+  var pct = total ? Math.round(done/total*100) : 0;
+  document.getElementById('pb-lbl').textContent = pct+'% complete ('+done+'/'+total+')';
+  document.getElementById('pb-fill').style.width = pct+'%';
+  SECTIONS.forEach(function(s){
+    var tag = document.getElementById('tag-'+s.id); if(!tag) return;
+    var seedNs = s.seeds.map(function(x){return x.n;});
+    var extraNs = d.cb&&d.cb[s.id] ? Object.keys(d.cb[s.id]).filter(function(k){return seedNs.indexOf(parseInt(k))===-1;}) : [];
+    var tot = s.seeds.length+extraNs.length;
+    var fil = 0;
+    s.seeds.forEach(function(seed){var r=getRow(s.id,seed.n);if(r.q&&r.q.trim())fil++;});
+    extraNs.forEach(function(k){var r=getRow(s.id,parseInt(k));if(r.q&&r.q.trim())fil++;});
+    var scls=fil===tot&&tot>0?'done':fil>0?'part':'empty';
+    tag.className='stag '+scls; tag.textContent=fil===tot&&tot>0?'Complete':fil>0?fil+'/'+tot+' done':'Not started';
+  });
+  ['s11','s12'].forEach(function(sid){
+    var qs=sid==='s11'?TQS:AQS;
+    var a=qs.filter(function(q){return getLA(q.ref).result;}).length;
+    var tag=document.getElementById('tag-'+sid); if(!tag)return;
+    tag.className='stag '+(a===qs.length?'done':a>0?'part':'empty');
+    tag.textContent=a===qs.length?'Complete':a>0?a+'/'+qs.length+' done':'Not started';
+  });
+}
+
+function flash(msg){var e=document.getElementById('smsg');e.textContent=msg;e.classList.add('on');setTimeout(function(){e.classList.remove('on');},2400);}
+
+function submitAll() {
+  fetch(API+'/api/submit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({tester:CU,paired_with:PAIRING[CU]||''})})
+    .then(function(){flash('Submitted! Your responses are now in the dashboard');buildGrid();})
+    .catch(function(){flash('Submission recorded locally');});
+}
+
+// ── DASHBOARD ─────────────────────────────────────────────
+function loadDash() {
+  document.getElementById('dash-content').innerHTML = '<div style="color:#888;padding:40px;text-align:center"><span class="spinner"></span>Loading...</div>';
+  fetch(API+'/api/dashboard')
+    .then(function(r){return r.json();})
+    .then(function(data){ renderDash(data); })
+    .catch(function(){ document.getElementById('dash-content').innerHTML = '<div style="color:#c00;padding:20px">Could not load dashboard. Is the server running?</div>'; });
+}
+
+function renderDash(data) {
+  var responses = data.responses, subs = data.submissions;
+  var subMap = {};
+  subs.forEach(function(s){subMap[s.tester]=s.submitted_at;});
+
+  var laRows = responses.filter(function(r){return r.section==='la'&&r.result;});
+  var cbRows = responses.filter(function(r){return r.section!=='la'&&r.question;});
+  var laTotal=laRows.length, laPasses=laRows.filter(function(r){return r.pass_fail==='Pass';}).length;
+  var laRats=laRows.filter(function(r){return r.rating;}).map(function(r){return +r.rating;});
+  var avg=laRats.length?(laRats.reduce(function(a,b){return a+b;},0)/laRats.length).toFixed(1):'--';
+  var pr=laTotal?Math.round(laPasses/laTotal*100):0;
+  var activeSet={};
+  responses.forEach(function(r){if(r.question||r.result)activeSet[r.tester]=1;});
+  var active=Object.keys(activeSet).length;
+  var defCnt=laRows.filter(function(r){return r.result==='N'||(r.rating&&+r.rating<=2);}).length;
+  defCnt+=cbRows.filter(function(r){return r.q8&&+r.q8<=2;}).length;
+
+  var khtml =
+    '<div class="kcard"><div class="klbl">Testers active</div><div class="kval bl">'+active+'/'+TESTERS.length+'</div></div>'+
+    '<div class="kcard"><div class="klbl">LA responses</div><div class="kval bl">'+laTotal+'</div></div>'+
+    '<div class="kcard"><div class="klbl">LA pass rate</div><div class="kval '+(pr>=80?'gr':pr>=50?'am':'rd')+'">'+pr+'%</div></div>'+
+    '<div class="kcard"><div class="klbl">Avg LA rating</div><div class="kval '+(avg>=4?'gr':avg>=3?'am':'rd')+'">'+avg+'/5</div></div>'+
+    '<div class="kcard"><div class="klbl">Defects flagged</div><div class="kval rd">'+defCnt+'</div></div>';
+
+  var progRows = TESTERS.map(function(n){
+    var myCB = cbRows.filter(function(r){return r.tester===n;}).length;
+    var myLA = laRows.filter(function(r){return r.tester===n;}).length;
+    var myRats = laRows.filter(function(r){return r.tester===n&&r.rating;}).map(function(r){return +r.rating;});
+    var avgR = myRats.length?(myRats.reduce(function(a,b){return a+b;},0)/myRats.length).toFixed(1):'--';
+    var myDefs = laRows.filter(function(r){return r.tester===n&&(r.result==='N'||(r.rating&&+r.rating<=2));}).length;
+    var cbTotal = SECTIONS.reduce(function(a,s){return a+s.seeds.length;},0);
+    var cbBk = myCB===cbTotal&&cbTotal>0?'pass':myCB>0?'part':'pend';
+    var laBk = subMap[n]?'pass':myLA===LAQS.length?'pass':myLA>0?'part':'pend';
+    return '<tr><td style="font-weight:600">'+n+'</td>'+
+      '<td><span class="badge '+cbBk+'">'+myCB+'/'+cbTotal+'</span></td>'+
+      '<td><span class="badge '+laBk+'">'+(subMap[n]?'Submitted':myLA+'/'+LAQS.length)+'</span></td>'+
+      '<td>'+(avgR==='--'?'--':'\u2605 '+avgR)+'</td>'+
+      '<td>'+(myDefs>0?'<span style="color:#A32D2D;font-weight:700">'+myDefs+'</span>':'<span style="color:#3B6D11">0</span>')+'</td></tr>';
+  }).join('');
+
+  var bars = LAQS.map(function(item){
+    var y=laRows.filter(function(r){return r.q_ref===item.ref&&r.result==='Y';}).length;
+    var n2=laRows.filter(function(r){return r.q_ref===item.ref&&r.result==='N';}).length;
+    var t=y+n2, pct=t?Math.round(y/t*100):0;
+    var col=pct>=80?'#3B6D11':pct>=50?'#BA7517':'#A32D2D';
+    return '<div class="hbar"><div class="hbar-lbl" title="'+item.q+'">'+item.ref+': '+item.q.slice(0,24)+'...</div>'+
+      '<div class="hbar-track"><div class="hbar-fill" style="width:'+pct+'%;background:'+col+'"></div></div>'+
+      '<div class="hbar-val" style="color:'+col+'">'+pct+'%</div></div>';
+  }).join('');
+
+  var cbTableRows = cbRows.slice(0,200).map(function(r){
+    return '<tr><td style="font-weight:600;white-space:nowrap">'+esc(r.tester)+'</td>'+
+      '<td>'+esc(r.section||'')+'</td><td>'+esc(String(r.q_num||''))+'</td>'+
+      '<td style="max-width:180px;font-size:11px">'+esc(r.question||'')+'</td>'+
+      '<td>'+(r.q1||'--')+'</td><td>'+(r.q2||'--')+'</td>'+
+      '<td>'+(r.q3?'\u2605 '+r.q3:'--')+'</td><td>'+(r.q8?'\u2605 '+r.q8:'--')+'</td>'+
+      '<td style="max-width:160px;font-size:11px;color:#666">'+esc(r.comments||'')+'</td></tr>';
+  }).join('');
+
+  var laTableRows = laRows.map(function(r){
+    return '<tr><td style="font-weight:600;white-space:nowrap">'+esc(r.tester)+'</td>'+
+      '<td><strong>'+esc(r.q_ref||'')+'</strong></td>'+
+      '<td style="font-size:11px;max-width:200px">'+(LAQS.find(function(q){return q.ref===r.q_ref;})||{q:''}).q+'</td>'+
+      '<td>'+(r.result||'--')+'</td><td>'+(r.rating?'\u2605 '+r.rating:'--')+'</td>'+
+      '<td>'+(r.pass_fail?'<span class="badge '+(r.pass_fail==='Pass'?'pass':'fail')+'">'+r.pass_fail+'</span>':'--')+'</td>'+
+      '<td style="font-size:11px;color:#666;max-width:180px">'+esc(r.comments||'')+'</td></tr>';
+  }).join('');
+
+  document.getElementById('dash-content').innerHTML =
+    '<div class="kgrid">'+khtml+'</div>'+
+    '<div class="two-col">'+
+      '<div class="panel"><h3>Tester progress</h3><div style="overflow-x:auto"><table class="tbl"><thead><tr><th>Tester</th><th>S1-10</th><th>S11-12</th><th>Avg \u2605</th><th>Defects</th></tr></thead><tbody>'+progRows+'</tbody></table></div></div>'+
+      '<div class="panel"><h3>Live Agent pass rates</h3>'+bars+'</div>'+
+    '</div>'+
+    '<div class="panel"><h3>All chatbot responses (S1-10) <span style="font-weight:400;font-size:11px;color:#888">'+cbRows.length+' responses</span></h3>'+
+      '<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>Tester</th><th>Sec</th><th>Q#</th><th>Question</th><th>Answer?</th><th>Sources?</th><th>Exp</th><th>Overall</th><th>Comments</th></tr></thead>'+
+      '<tbody>'+cbTableRows+'</tbody></table></div></div>'+
+    '<div class="panel"><h3>All Live Agent responses (S11-12) <span style="font-weight:400;font-size:11px;color:#888">'+laRows.length+' responses</span></h3>'+
+      '<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>Tester</th><th>Ref</th><th>Test Item</th><th>Result</th><th>Rating</th><th>Pass/Fail</th><th>Comments</th></tr></thead>'+
+      '<tbody>'+laTableRows+'</tbody></table></div></div>';
+}
+
+// ── DEFECTS ───────────────────────────────────────────────
+function loadDefects() {
+  fetch(API+'/api/dashboard')
+    .then(function(r){return r.json();})
+    .then(function(data){
+      var defs=[];
+      data.responses.forEach(function(r){
+        if(r.section==='la'&&r.result&&(r.result==='N'||r.pass_fail==='Fail'||(r.rating&&+r.rating<=2))){
+          var q=LAQS.find(function(q){return q.ref===r.q_ref;})||{q:r.q_ref};
+          defs.push({n:r.tester,type:'Live Agent',ref:r.q_ref,q:q.q,result:r.result,rating:r.rating,pf:r.pass_fail,cmt:r.comments,sev:(+r.rating<=2||r.result==='N')?'hi':+r.rating<=3?'me':'lo'});
+        }
+        if(r.section!=='la'&&r.q8&&+r.q8<=2){
+          defs.push({n:r.tester,type:'Chatbot',ref:'S'+r.section+' Q'+r.q_num,q:r.question,result:r.q1,rating:r.q8,pf:+r.q8>=4?'Pass':'Fail',cmt:r.comments,sev:+r.q8===1?'hi':'me'});
+        }
+      });
+      var hi=defs.filter(function(d){return d.sev==='hi';}).length;
+      var me=defs.filter(function(d){return d.sev==='me';}).length;
+      document.getElementById('def-kpis').innerHTML=
+        '<div class="kcard"><div class="klbl">Total defects</div><div class="kval rd">'+defs.length+'</div></div>'+
+        '<div class="kcard"><div class="klbl">High severity</div><div class="kval rd">'+hi+'</div></div>'+
+        '<div class="kcard"><div class="klbl">Medium severity</div><div class="kval am">'+me+'</div></div>';
+      document.getElementById('def-list').innerHTML = !defs.length
+        ? '<p style="color:#aaa;padding:14px 0">No defects yet</p>'
+        : defs.map(function(d,i){
+            return '<div class="def-row">'+
+              '<div class="def-t"><span class="sev '+d.sev+'">'+(d.sev==='hi'?'High':d.sev==='me'?'Medium':'Low')+'</span>'+
+              '<span style="background:#f0f0f0;font-size:10px;padding:2px 8px;border-radius:20px">'+d.type+'</span>'+
+              'DEF-'+String(i+1).padStart(3,'0')+' &middot; '+esc(d.ref)+'</div>'+
+              '<div class="def-m"><strong>'+esc(d.n)+'</strong> &middot; '+esc(d.q||'')+'<br>'+
+              'Result: <strong>'+(d.result||'--')+'</strong> &middot; Rating: <strong>'+(d.rating?'\u2605 '+d.rating:'--')+'</strong>'+
+              (d.pf?' &middot; <span class="badge '+(d.pf==='Pass'?'pass':'fail')+'">'+d.pf+'</span>':'')+
+              (d.cmt?'<div style="margin-top:4px;color:#333;font-style:italic">"'+esc(d.cmt)+'"</div>':'')+
+              '</div></div>';
+          }).join('');
+    });
+}
+
+// ── EXPORT ────────────────────────────────────────────────
+function exportMyXLS() {
+  if(!CU) return;
+  var d = ud();
+  var r1=[['Section','Q#','Topic','Question','Bot Response','Source','1-Answer?','2-Sources?','3-Experience','4-Format?','5-Language?','6-Uncertainty?','7-Hallucination?','8-Rating','Comments']];
+  SECTIONS.forEach(function(s){
+    var allNs = s.seeds.map(function(x){return x.n;});
+    if(d.cb&&d.cb[s.id]) Object.keys(d.cb[s.id]).forEach(function(k){var n=parseInt(k);if(allNs.indexOf(n)===-1)allNs.push(n);});
+    allNs.forEach(function(n){
+      var r=getRow(s.id,n); if(!r.q) return;
+      r1.push(['S'+s.num+' '+s.title,n,s.topic,r.q,r.bot||'',r.src||'',r.q1||'',r.q2||'',r.q3||'',r.q4||'',r.q5||'',r.q6||'',r.q7||'',r.q8||'',r.cmt||'']);
+    });
+  });
+  var r2=[['Tester','Paired With','Ref','Test Item','Section','Result','Rating','Pass/Fail','Comments']];
+  TQS.forEach(function(q){var r=getLA(q.ref);r2.push([CU,PAIRING[CU]||'',q.ref,q.q,'Section 11',r.result||'',r.rating||'',r.pf||'',r.cmt||'']);});
+  AQS.forEach(function(q){var r=getLA(q.ref);r2.push([CU,PAIRING[CU]||'',q.ref,q.q,'Section 12',r.result||'',r.rating||'',r.pf||'',r.cmt||'']);});
+  var wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(r1),'Chatbot S1-10');
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(r2),'Live Agent S11-12');
+  XLSX.writeFile(wb,'AskBall_UAT_'+CU.replace(/ /g,'_')+'.xlsx');
+}
+
+function exportAllXLS() {
+  fetch(API+'/api/export')
+    .then(function(r){return r.json();})
+    .then(function(data){
+      var r1=[['Tester','Section','Q#','Topic','Question','Bot Response','Source','1-Answer?','2-Sources?','3-Exp','4-Format?','5-Lang?','6-Uncertainty?','7-Hall?','8-Rating','Comments','Submitted']];
+      var subMap={};data.submissions.forEach(function(s){subMap[s.tester]=new Date(s.submitted_at).toLocaleDateString();});
+      data.responses.filter(function(r){return r.section!=='la'&&r.question;}).forEach(function(r){
+        r1.push([r.tester,r.section,r.q_num,'',r.question,r.bot_response||'',r.source_ref||'',r.q1||'',r.q2||'',r.q3||'',r.q4||'',r.q5||'',r.q6||'',r.q7||'',r.q8||'',r.comments||'',subMap[r.tester]||'']);
+      });
+      var r2=[['Tester','Paired With','Ref','Test Item','Section','Result','Rating','Pass/Fail','Comments','Submitted']];
+      data.responses.filter(function(r){return r.section==='la';}).forEach(function(r){
+        var q=LAQS.find(function(q){return q.ref===r.q_ref;})||{q:''};
+        r2.push([r.tester,PAIRING[r.tester]||'',r.q_ref,q.q,r.q_ref&&r.q_ref[0]==='T'?'S11':'S12',r.result||'',r.rating||'',r.pass_fail||'',r.comments||'',subMap[r.tester]||'']);
+      });
+      var r3=[['#','Tester','Type','Ref','Question','Result','Rating','Pass/Fail','Severity','Comment']];
+      var i=0;
+      data.responses.forEach(function(r){
+        var def=false,sev='';
+        if(r.section==='la'&&r.result&&(r.result==='N'||r.pass_fail==='Fail'||(r.rating&&+r.rating<=2))){def=true;sev=(+r.rating<=2||r.result==='N')?'High':+r.rating<=3?'Medium':'Low';}
+        if(r.section!=='la'&&r.q8&&+r.q8<=2){def=true;sev=+r.q8===1?'High':'Medium';}
+        if(def){i++;var q=r.section==='la'?(LAQS.find(function(q){return q.ref===r.q_ref;})||{q:''}).q:r.question;
+          r3.push([i,r.tester,r.section==='la'?'Live Agent':'Chatbot',r.q_ref||'S'+r.section+' Q'+r.q_num,q,r.result||'',r.rating||'',r.pass_fail||'',sev,r.comments||'']);}
+      });
+      var wb=XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(r1),'Chatbot Responses');
+      XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(r2),'Live Agent S11-12');
+      XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(r3),'Defect Tracker');
+      XLSX.writeFile(wb,'AskBall_UAT_All_Results.xlsx');
+    });
+}
+
+function exportDefXLS() { exportAllXLS(); }
+
+buildGrid();
+</script>
+</body>
+</html>
